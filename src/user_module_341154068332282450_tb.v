@@ -9,7 +9,7 @@ wire [7:0] io_out;
 reg clk, reset, write_en;
 reg [4:0] pdm_input;
 
-assign io_in = {pdm_input, write_en, clk, reset};
+assign io_in = {pdm_input, write_en, reset, clk};
 
 user_module_341154068332282450 UUT (.io_in(io_in), .io_out(io_out));
 
