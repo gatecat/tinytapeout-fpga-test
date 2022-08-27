@@ -1,5 +1,5 @@
 `default_nettype none
-//`include "user_module_339898704941023827.v"
+//`include "user_module_341154068332282450.v"
 
 module sevenseg_top (
   input TINY_CLK,
@@ -21,6 +21,6 @@ assign io_in_x[5] = io_in[5];
 assign io_in_x[6] = io_in[6];
 assign io_in_x[7] = io_in[7];
 
-user_module_339898704941023827 mod1(.io_in(io_in_x), .io_out(io_out));
+user_module_341154068332282450 mod1(.io_in(io_in_x), .io_out(io_out));
 
 endmodule
