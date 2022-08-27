@@ -1,6 +1,11 @@
 (Original readme for the template repository [here](https://github.com/mattvenn/wokwi-verilog-gds-test/blob/main/README.md))
 
-This repo is an experiment in using Verilog source files instead of Wokwi diagrams for [TinyTapeout](tinytapeout.com). If you're interested in doing the same, make sure to edit the top level Makefile and replace `WOKWI_PROJECT_ID` with one that you generate so it doesn't clash with this repo.
+This repo is an experiment in using Verilog source files instead of Wokwi diagrams for [TinyTapeout](tinytapeout.com).
 
-Hardware used for testing this demo project is the TinyFPGA BX, install the [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite-build) and issue `make` under `src/` to generate bitstream to load on hardware.
-
+The Verilog flow is:
+0) Fork this Repo
+1) Create a [wokwi](https://wokwi.com/projects/339800239192932947) project to get an ID
+2) Update WOWKI_PROJECT_ID in Makefile
+3) `grep -rl "341154068332282450" ./src | sed -i "s/341154068332282450/YOUR_WOKWI_ID/g"` from the top of the repo
+4) Replace behavioural code in user_module_ID.v with your own, likewise change the testbench
+5) Push changes, which triggers the GitHub Action to build the project
