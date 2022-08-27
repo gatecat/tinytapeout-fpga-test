@@ -2,8 +2,8 @@
 
 module pdm(
     input [4:0] pdm_input,
-    input       clk, reset,
     input       write_en,
+    input       clk, reset,    
     output      pdm_out
 );
 
