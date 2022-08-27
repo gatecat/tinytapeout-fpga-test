@@ -3,7 +3,7 @@
 
 module user_module_341154068332282450_tb;
 
-reg [7:0] io_in;
+wire [7:0] io_in;
 wire [7:0] io_out;
 
 reg clk, reset, write_en;
@@ -25,7 +25,7 @@ initial begin
  end
 
 parameter CLK_HALF_PERIOD = 5;
-parameter TCLK = 2*CLK_HALF_PERIOD
+parameter TCLK = 2*CLK_HALF_PERIOD;
 always begin
     clk = 1'b1;
     #(CLK_HALF_PERIOD);
