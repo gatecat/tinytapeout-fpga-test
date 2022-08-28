@@ -1,6 +1,8 @@
+![](../../workflows/wokwi/badge.svg)
+
 (Original readme for the template repository [here](https://github.com/mattvenn/wokwi-verilog-gds-test/blob/main/README.md))
 
-This repo is an experiment in using Verilog source files instead of Wokwi diagrams for [TinyTapeout](tinytapeout.com).
+This repo is an experiment in using Verilog source files instead of Wokwi diagrams for [TinyTapeout](https://tinytapeout.com).
 
 The Verilog flow is:
 

@@ -16,8 +16,7 @@ set ::env(SYNTH_READ_BLACKBOX_LIB) 1
 
 # HACK: explicitly specify which files we are using, ignore TB etc.
 set ::env(VERILOG_FILES) "$::env(DESIGN_DIR)/user_module_341154068332282450.v \
-$::env(DESIGN_DIR)/scan_wrapper_341154068332282450.v \
-$::env(DESIGN_DIR)/pdm.v"
+$::env(DESIGN_DIR)/scan_wrapper_341154068332282450.v"
 
 # absolute die size
 set ::env(FP_SIZING) absolute
