@@ -36,10 +36,6 @@ set ::env(DECAP_CELL) "\
 set ::env(CLOCK_PERIOD) "100"
 set ::env(CLOCK_PORT) "clk"
 
-set ::env(BASE_SDC_FILE) $::env(DESIGN_DIR)/base.sdc
-
-set ::env(SYNTH_CLOCK_UNCERTAINITY) 0.20
-set ::env(SYNTH_CLOCK_TRANSITION)   0.15
 
 # don't use power rings or met5
 set ::env(DESIGN_IS_CORE) 0
@@ -50,4 +46,4 @@ set ::env(VDD_NETS) [list {vccd1}]
 set ::env(GND_NETS) [list {vssd1}]
  
 # set ::env(CLOCK_TREE_SYNTH) 0
-set ::env(PL_TARGET_DENSITY) 0.62
+set ::env(PL_TARGET_DENSITY) 0.67

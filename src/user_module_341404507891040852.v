@@ -14,7 +14,7 @@ module user_module_341404507891040852(
     wire cfg_frameinc = io_in[1];
     wire cfg_framestrb = io_in[2];
     wire cfg_dataclk = io_in[3];
-    wire cfg_data = io_in[4];
+    wire [3:0] cfg_sel = io_in[7:4];
 
     localparam W = 3;
     localparam H = 4;
@@ -30,8 +30,12 @@ module user_module_341404507891040852(
         else
             frame_ctr <= frame_ctr + 1'b1;
 
+    // avoid a shift register for the frame data because that's the highest hold risk
     always @(posedge cfg_dataclk)
-        frame_sr <= {frame_sr[FW-2:0], cfg_data};
+        if (&cfg_sel)
+            frame_sr <= 0;
+        else
+            frame_sr[cfg_sel] = 1'b1;
 
     wire [FH-1:0] frame_strb;
     wire gated_strobe = cfg_mode & cfg_framestrb;
@@ -49,7 +53,7 @@ module user_module_341404507891040852(
         genvar yy;
         for (yy = 0; yy < H; yy = yy + 1'b1) begin: y_c
             for (xx = 0; xx < W; xx = xx + 1'b1) begin: x_c
-                if (xx == (W - 1) && yy >= (H - 2)) begin // reduce area slightly
+                if (xx == (W - 1) && yy == (H - 1)) begin // reduce area slightly
                     assign cell_q[yy][xx] = cell_q[yy][xx - 1];
                 end else begin
                     wire ti, bi, li, ri;
