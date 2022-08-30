@@ -52,8 +52,10 @@ module scan_wrapper_USER_MODULE_ID (
         .CLK_N      (clk),
         .D          (scan_data_out[NUM_IOS-1]),
         .Q          (data_out),
+`ifdef WITH_POWER
         .VPWR       (1'b1),
-        .VGND       (1'b0)
+        .VGND       (1'b0)#
+`endif
     );
 
     // scan flops have a mux on their inputs to choose either data from the user module or the previous flop's output
