@@ -54,23 +54,27 @@ module scan_wrapper_USER_MODULE_ID (
     `ifndef FORMAL
     `ifndef FORMAL_COMPAT
     sky130_fd_sc_hd__sdfxtp_1 scan_flop [NUM_IOS-1:0] (
+`ifdef WITH_POWER
+        .VPWR       (1'b1),
+        .VGND       (1'b0),
+`endif
         .CLK        (clk), 
         .D          (scan_data_in),
         .SCD        (module_data_out),
         .SCE        (scan_select_in),
-        .Q          (scan_data_out),
-        .VPWR       (1'b1),
-        .VGND       (1'b0)
+        .Q          (scan_data_out)
     );
 
     // latch is used to latch the input data of the user module while the scan chain is used to capture the user module's outputs
     // https://antmicro-skywater-pdk-docs.readthedocs.io/en/test-submodules-in-rtd/contents/libraries/sky130_fd_sc_hd/cells/dlxtp/README.html
     sky130_fd_sc_hd__dlxtp_1 latch [NUM_IOS-1:0] (
+`ifdef WITH_POWER
+        .VPWR       (1'b1),
+        .VGND       (1'b0),
+`endif
         .D          (scan_data_out),
         .GATE       (latch_enable_in),
-        .Q          (module_data_in),
-        .VPWR       (1'b1),
-        .VGND       (1'b0)
+        .Q          (module_data_in)
     );
     `endif
     `endif

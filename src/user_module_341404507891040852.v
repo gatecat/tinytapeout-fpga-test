@@ -9,15 +9,18 @@ module user_module_341404507891040852(
   output [7:0] io_out
 );
 
+    wire cfg_mode, cfg_frameinc, cfg_framestrb, cfg_dataclk;
+    wire [3:0] cfg_sel;
 
-    wire cfg_mode = io_in[0];
-    wire cfg_frameinc = io_in[1];
-    wire cfg_framestrb = io_in[2];
-    wire cfg_dataclk = io_in[3];
-    wire [3:0] cfg_sel = io_in[7:4];
+    sky130_fd_sc_hd__clkbuf_2 mode_clkbuf(.A(io_in[0]), .X(cfg_mode));
+    sky130_fd_sc_hd__clkbuf_2 frameinc_clkbuf(.A(io_in[1]), .X(cfg_frameinc));
+    sky130_fd_sc_hd__clkbuf_2 framestrb_clkbuf(.A(io_in[2]), .X(cfg_framestrb));
+    sky130_fd_sc_hd__clkbuf_4 data_clkbuf(.A(io_in[3]), .X(cfg_dataclk));
+
+    sky130_fd_sc_hd__buf_2 sel_buf[3:0] (.A(io_in[7:4]), .X(cfg_sel));
 
     localparam W = 3;
-    localparam H = 3;
+    localparam H = 4;
     localparam FW = W * 4;
     localparam FH = H * 2;
 
@@ -31,8 +34,8 @@ module user_module_341404507891040852(
             frame_ctr <= frame_ctr + 1'b1;
 
     // avoid a shift register for the frame data because that's the highest hold risk
-    always @(posedge cfg_dataclk)
-        if (&cfg_sel)
+    always @(posedge cfg_dataclk, posedge cfg_frameinc)
+        if (cfg_frameinc)
             frame_sr <= 0;
         else
             frame_sr[cfg_sel] = 1'b1;
@@ -43,9 +46,14 @@ module user_module_341404507891040852(
         genvar ii;
         for (ii = 0; ii < FH; ii = ii + 1'b1) begin
             //make sure this is glitch free
-            sky130_fd_sc_hd__nand2_1 cfg_nand (.A(gated_strobe), .B(frame_ctr == ii), .Y(frame_strb[ii]));
+            sky130_fd_sc_hd__nand2_2 cfg_nand (.A(gated_strobe), .B(frame_ctr == ii), .Y(frame_strb[ii]));
         end
     endgenerate
+
+    wire fab_clk;
+    wire [3:0] fab_din;
+    sky130_fd_sc_hd__clkbuf_4 fab_clkbuf(.A(io_in[3]), .X(fab_clk));
+    sky130_fd_sc_hd__buf_1 din_buf[3:0] (.A(io_in[7:4]), .X(fab_din));
 
     wire [0:W-1] cell_q[0:H-1];
     generate
@@ -54,12 +62,12 @@ module user_module_341404507891040852(
         for (yy = 0; yy < H; yy = yy + 1'b1) begin: y_c
             for (xx = 0; xx < W; xx = xx + 1'b1) begin: x_c
                 wire ti, bi, li, ri;
-                if (yy > 0) assign ti = cell_q[yy-1][xx]; else assign ti = io_in[xx + 4];
+                if (yy > 0) assign ti = cell_q[yy-1][xx]; else assign ti = fab_din[xx];
                 if (yy < H-1) assign bi = cell_q[yy+1][xx]; else assign bi = cell_q[yy][xx];
-                if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = io_in[yy + 1];
+                if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = fab_din[yy];
                 if (xx < W-1) assign ri = cell_q[yy][xx+1]; else assign ri = cell_q[yy][xx];
-                logic_cell_341404507891040852 lc_i (
-                    .CLK(io_in[3]),
+                logic_cell_341404507891040852 #(.has_ff(xx[0] ^ yy[0])) lc_i (
+                    .CLK(fab_clk),
                     .cfg_strb(frame_strb[yy * 2 +: 2]),
                     .cfg_data(frame_sr[xx * 4 +: 4]),
                     .T(ti), .B(bi), .L(li),. R(ri),
@@ -69,7 +77,7 @@ module user_module_341404507891040852(
         end
     endgenerate
 
-    assign io_out = {cell_q[2][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1][2], cell_q[H-1]};
+    assign io_out = {cell_q[3][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1][2], cell_q[H-1]};
 
 
 endmodule
@@ -81,7 +89,7 @@ module logic_cell_341404507891040852 (
     input T, L, R, B,
     output Q
 );
-
+    parameter has_ff = 1'b0;
     // config storage
     wire [7:0] cfg;
     generate
@@ -128,15 +136,22 @@ module logic_cell_341404507891040852 (
         .A0(i0), .A1(i1), .S(s0), .Y(muxo_n)
     );
     // The DFF
-    wire dffo_n;
-    sky130_fd_sc_hd__dfsbp_1 dff(
-        .D(muxo_n),
-        .SET_B(cfg_strb[0]),
-        .CLK(CLK),
-        .Q(dffo_n)
-    );
-    // The final output mux
-    sky130_fd_sc_hd__mux2i_1 ffsel (
-        .A0(muxo_n), .A1(dffo_n), .S(cfg[7]), .Y(Q)
-    );
+    generate if (has_ff) begin: dff
+        wire dffo_n;
+        sky130_fd_sc_hd__dfsbp_1 dff(
+            .D(muxo_n),
+            .SET_B(cfg_strb[0]),
+            .CLK(CLK),
+            .Q(dffo_n)
+        );
+        // The final output mux
+        sky130_fd_sc_hd__mux2i_1 ffsel (
+            .A0(muxo_n), .A1(dffo_n), .S(cfg[7]), .Y(Q)
+        );
+    end else begin
+        sky130_fd_sc_hd__inv_1 linv (
+            .A(muxo_n), .Y(Q)
+        );
+    end
+    endgenerate
 endmodule
