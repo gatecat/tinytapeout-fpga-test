@@ -17,7 +17,7 @@ module user_module_341404507891040852(
     wire [3:0] cfg_sel = io_in[7:4];
 
     localparam W = 3;
-    localparam H = 4;
+    localparam H = 3;
     localparam FW = W * 4;
     localparam FH = H * 2;
 
@@ -53,27 +53,23 @@ module user_module_341404507891040852(
         genvar yy;
         for (yy = 0; yy < H; yy = yy + 1'b1) begin: y_c
             for (xx = 0; xx < W; xx = xx + 1'b1) begin: x_c
-                if (xx == (W - 1) && yy == (H - 1)) begin // reduce area slightly
-                    assign cell_q[yy][xx] = cell_q[yy][xx - 1];
-                end else begin
-                    wire ti, bi, li, ri;
-                    if (yy > 0) assign ti = cell_q[yy-1][xx]; else assign ti = io_in[xx + 4];
-                    if (yy < H-1) assign bi = cell_q[yy+1][xx]; else assign bi = cell_q[yy][xx];
-                    if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = io_in[yy];
-                    if (xx < W-1) assign ri = cell_q[yy][xx+1]; else assign ri = cell_q[yy][xx];
-                    logic_cell_341404507891040852 lc_i (
-                        .CLK(io_in[3]),
-                        .cfg_strb(frame_strb[yy * 2 +: 2]),
-                        .cfg_data(frame_sr[xx * 4 +: 4]),
-                        .T(ti), .B(bi), .L(li),. R(ri),
-                        .Q(cell_q[yy][xx])
-                    );
-                end
+                wire ti, bi, li, ri;
+                if (yy > 0) assign ti = cell_q[yy-1][xx]; else assign ti = io_in[xx + 4];
+                if (yy < H-1) assign bi = cell_q[yy+1][xx]; else assign bi = cell_q[yy][xx];
+                if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = io_in[yy + 1];
+                if (xx < W-1) assign ri = cell_q[yy][xx+1]; else assign ri = cell_q[yy][xx];
+                logic_cell_341404507891040852 lc_i (
+                    .CLK(io_in[3]),
+                    .cfg_strb(frame_strb[yy * 2 +: 2]),
+                    .cfg_data(frame_sr[xx * 4 +: 4]),
+                    .T(ti), .B(bi), .L(li),. R(ri),
+                    .Q(cell_q[yy][xx])
+                );
             end
         end
     endgenerate
 
-    assign io_out = {cell_q[3][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1][2], cell_q[H-1]};
+    assign io_out = {cell_q[2][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1][2], cell_q[H-1]};
 
 
 endmodule

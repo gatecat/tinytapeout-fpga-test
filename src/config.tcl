@@ -46,4 +46,4 @@ set ::env(VDD_NETS) [list {vccd1}]
 set ::env(GND_NETS) [list {vssd1}]
  
 # set ::env(CLOCK_TREE_SYNTH) 0
-set ::env(PL_TARGET_DENSITY) 0.67
+set ::env(PL_TARGET_DENSITY) 0.62
