@@ -34,13 +34,36 @@ jobs:
           repository: s-holst/GDS2WebGL
           path: GDS2WebGL
 
+    # PDK cache
+    - id: pdk_cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/pdk
+          ~/openlane
+          ~/caravel_user_project
+          ~/images
+        key: pdk-cache-mpw-7a
+        restore-keys: |
+          pdk-cache-mpw-7a
+
     # build PDK and fetch OpenLane
-    - name: pdk & caravel
+    - if: steps.pdk_cache.outputs.cache-hit != 'true'
+      name: pdk & caravel
       run: |
         cd $HOME
         git clone https://github.com/efabless/caravel_user_project.git -b mpw-7a
         cd caravel_user_project
         make setup
+        cd $HOME
+        mkdir images
+        docker save -o ~/images/openlane.tar efabless/openlane
+
+    - if: steps.pdk_cache.outputs.cache-hit == 'true'
+      name: restore openlane docker
+      run: |
+        docker load -i ~/images/openlane.tar
+
     # fetch the Verilog from Wokwi API
     - name: fetch Verilog
       run: make fetch
@@ -53,15 +76,12 @@ jobs:
     - name: show files
       run: find runs/wokwi/results
 
-    # make the SVG
-    - name: create svg
-      run: python view.py
-
     # make html gds viewer with GDS2WebGL
     - name: GDS2WebGL
       run: |
         cd GDS2WebGL
         python3 gds2webgl.py -i ../runs/wokwi/results/final/gds/*gds -o ../gds.html
+
     # archive the gds and some other important files
     - name: Archive files
       uses: actions/upload-artifact@v2
@@ -73,5 +93,13 @@ jobs:
             runs/wokwi/results/final/*
             runs/wokwi/reports/final_summary_report.csv
             runs/wokwi/reports/synthesis/1-synthesis.stat.rpt.strategy4
-            gds_render.svg
             gds.html
+
+    # archive the whole run dir for debug
+    - name: Archive files (Debug)
+      uses: actions/upload-artifact@v2
+      with:
+          # path depends on the tag and the module name
+          name: Debug
+          path: |
+            runs/wokwi/*
