@@ -21,7 +21,7 @@ $::env(DESIGN_DIR)/scan_wrapper_341404507891040852.v"
 # absolute die size
 set ::env(FP_SIZING) absolute
 set ::env(DIE_AREA) "0 0 100 100"
-set ::env(FP_CORE_UTIL) 90
+set ::env(FP_CORE_UTIL) 40
 set ::env(PL_BASIC_PLACEMENT) {1}
 
 # use alternative efabless decap cells to solve LI density issue
@@ -47,4 +47,8 @@ set ::env(GND_NETS) [list {vssd1}]
  
 set ::env(CLOCK_TREE_SYNTH) 0
 set ::env(PL_RESIZER_DESIGN_OPTIMIZATIONS) 0
-set ::env(PL_TARGET_DENSITY) 0.67
+set ::env(PL_TARGET_DENSITY) 0.74
+
+set ::env(BOTTOM_MARGIN_MULT) 2
+set ::env(TOP_MARGIN_MULT) 2
+

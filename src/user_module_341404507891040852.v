@@ -20,7 +20,7 @@ module user_module_341404507891040852(
     sky130_fd_sc_hd__buf_2 sel_buf[3:0] (.A(io_in[7:4]), .X(cfg_sel));
 
     localparam W = 3;
-    localparam H = 4;
+    localparam H = 5;
     localparam FW = W * 4;
     localparam FH = H * 2;
 
@@ -64,7 +64,7 @@ module user_module_341404507891040852(
                 wire ti, bi, li, ri;
                 if (yy > 0) assign ti = cell_q[yy-1][xx]; else assign ti = fab_din[xx];
                 if (yy < H-1) assign bi = cell_q[yy+1][xx]; else assign bi = cell_q[yy][xx];
-                if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = fab_din[yy];
+                if (xx > 0) assign li = cell_q[yy][xx-1]; else assign li = fab_din[yy >= 4 ? 3 : yy];
                 if (xx < W-1) assign ri = cell_q[yy][xx+1]; else assign ri = cell_q[yy][xx];
                 logic_cell_341404507891040852 #(.has_ff(xx[0] ^ yy[0])) lc_i (
                     .CLK(fab_clk),
@@ -77,7 +77,7 @@ module user_module_341404507891040852(
         end
     endgenerate
 
-    assign io_out = {cell_q[3][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1][2], cell_q[H-1]};
+    assign io_out = {cell_q[4][W-1], cell_q[3][W-1], cell_q[2][W-1], cell_q[1][W-1], cell_q[0][W-1], cell_q[H-1]};
 
 
 endmodule
@@ -105,26 +105,49 @@ module logic_cell_341404507891040852 (
 
     wire i0, i1;
     // I input muxes
-    sky130_fd_sc_hd__mux4_1 i0mux (
-        .A0(1'b0), .A1(T), .A2(R), .A3(L),
-        .S0(cfg[0]), .S1(cfg[1]),
-        .X(i0)
+    wire i0a, i0b;
+    sky130_fd_sc_hd__nand2_1 i0muxa0 (
+        .A(T), .B(cfg[0]),
+        .Y(i0a)
     );
-    wire lb;
-    sky130_fd_sc_hd__inv_1 linv (
-        .A(L), .Y(lb)
+    sky130_fd_sc_hd__mux2i_1 i0muxa1 (
+        .A0(R), .A1(L), .S(cfg[0]),
+        .Y(i0b)
     );
-    sky130_fd_sc_hd__mux4_1 i1mux (
-        .A0(1'b1), .A1(B), .A2(R), .A3(lb),
-        .S0(cfg[2]), .S1(cfg[3]),
-        .X(i1)
+
+    sky130_fd_sc_hd__mux2i_1 i0muxb (
+        .A0(i0a), .A1(i0b), .S(cfg[1]),
+        .Y(i0)
+    );
+
+    wire i1a, i1b;
+    sky130_fd_sc_hd__and2_1 i1muxa0 (
+        .A(cfg[2]), .B(L),
+        .X(i1a)
+    );
+    sky130_fd_sc_hd__mux2i_1 i1muxa1 (
+        .A0(B), .A1(R), .S(cfg[2]),
+        .Y(i1b)
+    );
+    sky130_fd_sc_hd__mux2i_1 i1muxb (
+        .A0(i1a), .A1(i1b), .S(cfg[3]),
+        .Y(i1)
     );
     // S input mux
-    wire s0s, s0;
-    sky130_fd_sc_hd__mux4_1 smux (
-        .A0(1'b0), .A1(T), .A2(R), .A3(L),
-        .S0(cfg[4]), .S1(cfg[5]),
-        .X(s0s)
+    wire s0s, s0, s0a, s0b;
+
+    sky130_fd_sc_hd__nand2_1 s0muxa0 (
+        .A(T), .B(cfg[4]),
+        .Y(s0a)
+    );
+    sky130_fd_sc_hd__mux2i_1 s0muxa1 (
+        .A0(R), .A1(L), .S(cfg[4]),
+        .Y(s0b)
+    );
+
+    sky130_fd_sc_hd__mux2i_1 s0muxb (
+        .A0(s0a), .A1(s0b), .S(cfg[5]),
+        .Y(s0s)
     );
     // S invert
     sky130_fd_sc_hd__xnor2_1 sinv (

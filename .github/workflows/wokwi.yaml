@@ -98,6 +98,7 @@ jobs:
     # archive the whole run dir for debug
     - name: Archive files (Debug)
       uses: actions/upload-artifact@v2
+      if: always()
       with:
           # path depends on the tag and the module name
           name: Debug
