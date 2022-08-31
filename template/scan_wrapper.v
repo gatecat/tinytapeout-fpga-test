@@ -48,14 +48,14 @@ module scan_wrapper_USER_MODULE_ID (
 
     // end of the chain is a negedge FF to increase hold margin between blocks
     sky130_fd_sc_hd__dfrtn_1 out_flop (
+`ifdef WITH_POWER
+        .VPWR       (1'b1),
+        .VGND       (1'b0),
+`endif
         .RESET_B    (1'b1),
         .CLK_N      (clk),
         .D          (scan_data_out[NUM_IOS-1]),
-        .Q          (data_out),
-`ifdef WITH_POWER
-        .VPWR       (1'b1),
-        .VGND       (1'b0)#
-`endif
+        .Q          (data_out)
     );
 
     // scan flops have a mux on their inputs to choose either data from the user module or the previous flop's output
