@@ -51,8 +51,7 @@ set ::env(VDD_NETS) [list {vccd1}]
 set ::env(GND_NETS) [list {vssd1}]
  
 set ::env(PL_RESIZER_DESIGN_OPTIMIZATIONS) 0
-set ::env(PL_TARGET_DENSITY) 0.74
+set ::env(PL_TARGET_DENSITY) 0.65
 
 set ::env(BOTTOM_MARGIN_MULT) 2
 set ::env(TOP_MARGIN_MULT) 2
-
