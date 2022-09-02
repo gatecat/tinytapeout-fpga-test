@@ -34,6 +34,21 @@ module scan_wrapper_USER_MODULE_ID (
         .X          (clk),
     );
 
+		// We disable the resizer, so buffer input like it is done
+		// when the resizer does it for us
+    wire data_in_i;
+    wire scan_select_in_i;
+    wire latch_enable_in_i;
+
+    sky130_fd_sc_hd__buf_2 input_buffers[2:0] (
+`ifdef WITH_POWER
+        .VPWR       (1'b1),
+        .VGND       (1'b0),
+`endif
+        .A          ({data_in,   scan_select_in,   latch_enable_in   }),
+        .X          ({data_in_i, scan_select_in_i, latch_enable_in_i })
+    );
+
     // output buffers
         // Same as for input, to try and be more consistent, we make our own
     wire data_out_i;
@@ -43,8 +58,8 @@ module scan_wrapper_USER_MODULE_ID (
         .VPWR       (1'b1),
         .VGND       (1'b0),
 `endif
-        .A          ({clk,     data_out_i, scan_select_in,  latch_enable_in }),
-        .X          ({clk_out, data_out,   scan_select_out, latch_enable_out })
+        .A          ({clk,     data_out_i, scan_select_in_i, latch_enable_in_i }),
+        .X          ({clk_out, data_out,   scan_select_out,  latch_enable_out  })
     );
 
     /*
@@ -66,7 +81,7 @@ module scan_wrapper_USER_MODULE_ID (
     wire [NUM_IOS-1:0] module_data_out; // the data from the user module
 
     // scan chain - link all the flops, with data coming from data_in
-    assign scan_data_in = {scan_data_out[NUM_IOS-2:0], data_in};
+    assign scan_data_in = {scan_data_out[NUM_IOS-2:0], data_in_i};
 
     // end of the chain is a negedge FF to increase hold margin between blocks
     sky130_fd_sc_hd__dfrtn_1 out_flop (
@@ -92,7 +107,7 @@ module scan_wrapper_USER_MODULE_ID (
         .CLK        (clk), 
         .D          (scan_data_in),
         .SCD        (module_data_out),
-        .SCE        (scan_select_in),
+        .SCE        (scan_select_in_i),
         .Q          (scan_data_out)
     );
 
@@ -104,7 +119,7 @@ module scan_wrapper_USER_MODULE_ID (
         .VGND       (1'b0),
 `endif
         .D          (scan_data_out),
-        .GATE       (latch_enable_in),
+        .GATE       (latch_enable_in_i),
         .Q          (module_data_in)
     );
     `endif
