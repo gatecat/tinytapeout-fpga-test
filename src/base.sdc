@@ -21,7 +21,7 @@ if { ![info exists ::env(SYNTH_CLK_DRIVING_CELL_PIN)] } {
     set ::env(SYNTH_CLK_DRIVING_CELL_PIN) $::env(SYNTH_DRIVING_CELL_PIN)
 }
 
-set_driving_cell -lib_cell $::env(SYNTH_DRIVING_CELL) -pin $::env(SYNTH_DRIVING_CELL_PIN) [get_ports {data_in scan_select_in}]
+set_driving_cell -lib_cell $::env(SYNTH_DRIVING_CELL) -pin $::env(SYNTH_DRIVING_CELL_PIN) [get_ports {data_in scan_select_in latch_enable_in}]
 set_driving_cell -lib_cell $::env(SYNTH_CLK_DRIVING_CELL) -pin $::env(SYNTH_CLK_DRIVING_CELL_PIN) [get_ports {clk_in}]
 
 set cap_load [expr $::env(SYNTH_CAP_LOAD) / 1000.0]
