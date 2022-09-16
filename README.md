@@ -1,16 +1,56 @@
-![](../../workflows/wokwi/badge.svg)
+This repo contains the tiny "FPGA" submitted to tinytapeout.
 
-(Original readme for the template repository [here](https://github.com/mattvenn/wokwi-verilog-gds-test/blob/main/README.md))
+Each of the 15 tiles consists of a MUX2 and some simple routing on its inputs, with a DFF in 7 of the logic elements.
 
-(verilog flow from https://github.com/H-S-S-11/tinytapeout-verilog-test)
+The input mapping is as follows (`io_in[0]` is `cfg_mode` selects between config and user mode):
 
-This design shows a simple SRLLUT cell, allowing the LUT configuration to be programmed via a traditional frame configuration (the shift register would be shared across the entire die, and the multi-bit frames loaded in parallel for each row/column of the configuration). Then at runtime some dynamic logic trickery to "freeze" an intermediate value inbetween latches allows the LUT to be used as a shift register, like a certain Big Red Company's FPGAs have since time immemorial.
+I  | config       | user   |
+---|--------------|--------|
+0  | `1'b1`       | `1'b0` |
+1  | `frameinc`   | `-`    |
+2  | `framestrb`  | `-`    |
+3  | `dataclk`    | `clk`  |
+4  | `bitsel[0]`  | `i[0]` |
+5  | `bitsel[1]`  | `i[1]` |
+6  | `bitsel[2]`  | `i[2]` |
+7  | `bitsel[3]`  | `i[3]` |
 
-The Verilog flow is:
+`io_out[7:0]` are always fabric outputs.
 
-1) Fork this Repo
-2) Create a [wokwi](https://wokwi.com/projects/339800239192932947) project to get an ID
-3) Update WOWKI_PROJECT_ID in Makefile
-4) `grep -rl "341154068332282450" ./src | sed -i "s/341154068332282450/YOUR_WOKWI_ID/g"` from the top of the repo to find and replace all occurences of the old ID in `src` with yours, and rename the `user_module`, `user_module_tb` and `scan_wrapper` files to use your ID
-5) Replace behavioural code in user_module_ID.v with your own, likewise change the testbench
-6) Push changes, which triggers the GitHub Action to build the project
+The configuration sequence is as follows:
+ - raise `cfg_mode` from `0` to `1`
+ - pulse `frameinc` 0-1-0 to reset the data register
+ - pulse `cfg_mode` 1-0-1 to reset the frame address register
+ - for each frame in the bitstream:
+    - for each `1` in the frame, set `bitsel[3:0]` to the bit index of that `1` and pulse `dataclk` 0-1-0
+    - pulse `framestrb` 0-1-0 to write the current frame data
+    - pulse `frameinc` 0-1-0 to increment the frame address and clear the data register
+ - lower `cfg_mode`
+
+The device has 10 frames of 12 bits each, although a few bits are unused for the missing flipflops.
+Each tile spans 2 frames and 4 bits, the top left tile is frame 0..1 and bits 0..3.
+Tiles where `x[0] ^ y[0] == 1` have flipflops, forming a checkerboard pattern of tiles with and without flipflops.
+
+The bitmap inside each tile is:
+
+ F B| 0        | 1       | 2       | 3        |
+----|----------|---------|---------|----------|
+ 0  | `I0[0]`  | `I0[1]` | `I1[0]` | `I1[1]`  |
+ 1  | `S[0]`   | `S[1]`  | `SI`    | `DFF`    |
+
+
+`I0`, `I1` and `S` are the routing selections for the two data and select inputs for the MUX2 logic element. `SI` inverts select  (equivalent to swapping `I0`/`I1`) and `DFF` enables the D flip-flop in the output path for tiles that possess one.
+
+
+route | I0     | I1     | S      |
+------|--------|--------|--------|
+0     | `1'b0` | `1'b1` | `1'b0` |
+1     | `T`    | `~L`   | `T`    |
+2     | `R`    | `B`    | `R`    |
+3     | `L`    | `R`    | `L`    |
+
+`T` is the output of the tile above; `L` the output of the tile to the left, etc.
+
+On the left and top edge tiles, `L` and `T` inputs respectively are the user inputs `i[y]` (or `i[3]` in the `y==4` case) or `i[x]`) respectively. On the bottom and right edges, `B` and `R` loop back the cell output.
+
+`io_out[2:0]` is the output from the bottom edge tiles, `io_out[7:3]` is the output from the right edge tiles.
